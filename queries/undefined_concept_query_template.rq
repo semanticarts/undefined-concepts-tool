@@ -1,0 +1,35 @@
+prefix gist: <https://w3id.org/semanticarts/ns/ontology/gist/> 
+prefix owl: <http://www.w3.org/2002/07/owl#> 
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+prefix skos: <http://www.w3.org/2004/02/skos/core#> 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+# This query looks for concepts that are not defined in any of the ontologies.
+
+select distinct (?iri as ?undefined_concept)
+where
+{
+    {
+        { ?x ?iri ?y }
+        union
+        { ?x ?y ?iri }
+        union
+        { ?iri ?x ?y }
+
+        filter 
+        ( 
+            #contains(str(?iri), "semanticarts") &&
+            (contains(str(?iri), "/o/") || contains(str(?iri), "ns")) &&
+            isIRI(?iri) &&
+            !(regex(str(?iri),"gistPayroll|gistHR|gistCore|gistProfSrv|gistAcct")) &&
+            !(?iri IN 
+                (
+
+##DEFINED_CONCEPTS##
+
+                )
+            )
+        )
+    }
+} 

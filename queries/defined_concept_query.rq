@@ -1,0 +1,18 @@
+prefix gist: <https://w3id.org/semanticarts/ns/ontology/gist/> 
+prefix owl: <http://www.w3.org/2002/07/owl#> 
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+prefix skos: <http://www.w3.org/2004/02/skos/core#> 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+# This query gets a list of all defined concepts in the ontologies.
+
+select distinct ?defined_iri
+where
+{
+    { 
+        ?defined_iri rdf:type ?type . 
+        
+        filter(!isBlank(?defined_iri) && isIRI(?defined_iri))
+    }
+}
