@@ -19,7 +19,7 @@ where
 
         filter 
         ( 
-            #contains(str(?iri), "semanticarts") &&
+            contains(str(?iri), "semanticarts") &&
             (contains(str(?iri), "/o/") || contains(str(?iri), "ns")) &&
             isIRI(?iri) &&
             !(regex(str(?iri),"gistPayroll|gistHR|gistCore|gistProfSrv|gistAcct")) &&
