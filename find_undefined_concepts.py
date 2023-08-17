@@ -1,17 +1,10 @@
 #!/usr/bin/env python
+"""
+Find all of the undefined concepts in a target ontology.
+"""
 
 import os
-import argparse
-from rdflib import Graph
-
-# Set up command-line argument parsing for only the graph
-parser = argparse.ArgumentParser(description='Process and query ontologies.')
-parser.add_argument('graph_path', type=str, help='Path to the RDF graph of interest (.ttl file).')
-args = parser.parse_args()
-
-# Load the graph of interest from the specified file
-graph_of_interest = Graph()
-graph_of_interest.parse(args.graph_path, format='turtle')
+from rdflib import Graph, util
 
 # Load the provided SPARQL queries from the respective files
 with open("./queries/defined_concept_query.rq", "r") as file:
@@ -20,50 +13,81 @@ with open("./queries/defined_concept_query.rq", "r") as file:
 with open("./queries/undefined_concept_query_template.rq", "r") as file:
     undefined_concept_query_template = file.read()
 
-# Function to combine ontologies and generate a list of defined concepts
-def combine_ontologies():
-    
-    combined_graph_path = "./ontologies/combinedGraph.ttl"
-    defined_concepts_txt_path = './defined_concepts.txt'
-    
-    if os.path.exists(combined_graph_path):
-        os.remove(combined_graph_path)
-    
-    if os.path.exists(defined_concepts_txt_path):
-        os.remove(defined_concepts_txt_path)
 
-    combinedGraph = Graph()
-    ttl_dir = './ontologies'
-    for filename in os.listdir(ttl_dir):
-        if filename.endswith('.ttl'):
-            ttl_path = os.path.join(ttl_dir, filename)
-            combinedGraph.parse(ttl_path, format='turtle')
+def create_defined_concepts(combined_graph):
+    """Create the list of concepts that are defined in the ontologies provided"""
+    return [str(row['defined_iri']) for row in combined_graph.query(defined_concept_query)]
 
-    combinedGraph.serialize(destination="./ontologies/combinedGraph.ttl")
-    
-    # Use the defined_concept_query to extract defined concepts
-    defined_concepts_list = []
-    for row in combinedGraph.query(defined_concept_query):
-        defined_concepts_list.append(str(row['defined_iri']))
-    
-    with open('./defined_concepts.txt', 'w') as f:
-        f.write('\n'.join(defined_concepts_list))
-    
-    return defined_concepts_list
 
-# Function to find undefined concepts
-def find_undefined_concepts(defined_concepts_list):
+def find_undefined_concepts(defined_concepts_list, graph_of_interest):
+    """Function to find undefined concepts"""
     # Convert each IRI to its SPARQL format and join into a single string separated by commas
     formatted_defined_concepts = ", ".join([f"<{iri}>" for iri in defined_concepts_list])
-    
+
     # Injecting the formatted concepts into the query template
     undefined_concept_query_final = undefined_concept_query_template.replace("##DEFINED_CONCEPTS##", formatted_defined_concepts)
 
     # Use the updated undefined_concept_query to find undefined concepts
+    rows = graph_of_interest.query(undefined_concept_query_final)
+    if len(rows) == 0:
+        return
     print("\nUndefined concepts:")
-    for row in graph_of_interest.query(undefined_concept_query_final):
+    for row in rows:
         print(row["undefined_concept"])
     print('\n')
 
+
+def add_files_to_graph(rdf_file, combined_graph, graph_of_interest = None):
+    """"
+    Adds files to the combined graph, if a graph of interest is passed in, will also add that to the graph of interest.
+    This returns the combined_graph and the graph of interest. If you don't need the graph of interest, don't try to capture it
+
+    Use like  `combined_graph, _ = add_files_to_graph(rdf_file, combined_graph)`
+    Or `combined_graph, graph_of_interest = add_files_to_graph(rdf_file, combined_graph, graph_of_interest)`
+
+    These are combined into a single function because of the overlap between populating these graphs
+
+    """
+    fmt = util.guess_format(rdf_file)
+    if not fmt:
+        print(f"{rdf_file} does not have a parsable extension, and will not be added to the graph.\n")
+        return
+    combined_graph.parse(rdf_file, format=fmt)
+    if graph_of_interest != None:
+        graph_of_interest.parse(rdf_file, format=fmt)
+    return combined_graph, graph_of_interest
+
+
+def main():
+    """Handle the command line arguments for the operation of comments"""
+    # Set up command-line argument parsing for only the graph
+    parser = argparse.ArgumentParser(description='Process and query ontologies.')
+    parser.add_argument('-c', '--context', nargs="*", help='Path to imported or context rdf files or directories.')
+    parser.add_argument('focus_graph', nargs="+", help='Path to the RDF graphs of interest (.ttl file, or any file in rdf format with a proper extension). These are the graphs we are interested in seeing undefined concepts')
+    args = parser.parse_args()
+
+    # Load the graph of interest from the specified file
+    combined_graph = Graph()
+    graph_of_interest = Graph()
+    # load the focus graph, the graph
+    for rdf_file in args.focus_graph:
+        combined_graph, graph_of_interest = add_files_to_graph(rdf_file, combined_graph, graph_of_interest)
+
+    for context in args.context:
+        if os.path.isfile(context):
+            combined_graph, _ = add_files_to_graph(context, combined_graph)
+        elif os.path.isdir(context):
+            full_path = os.path.abspath(context)
+            for rdf_file in os.listdir(context):
+                combined_graph, _ = add_files_to_graph(os.path.join(full_path, rdf_file), combined_graph)
+        else:
+           print(f"there is an error with {context}")
+
+    defined_concepts = create_defined_concepts(combined_graph)
+
+    find_undefined_concepts(defined_concepts, graph_of_interest)
+
 if __name__ == '__main__':
-    find_undefined_concepts(combine_ontologies())
+    import argparse
+
+    main()
