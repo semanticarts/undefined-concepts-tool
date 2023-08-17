@@ -1,5 +1,4 @@
 # undefined-concepts-tool
-<<<<<<< HEAD
 
 Find all of the undefined concepts in an ontology
 
@@ -35,15 +34,3 @@ If one does not want to include the file `bad_taxonomy.ttl`, run `./find_undefin
 Or one could run: `./find_undefined_concepts -c ontologies/ taxonomies/taxonomyA.ttl -- focus_ontology_a.ttl focus_ontology_b.ttl`.
 
 Everything after the `-c` or `--context` flag is treated as an array of either files or directories. The focus graph file or files needs to appear before the flag, or after a `--`, or directly after the command if there is no context flag added.
-=======
-```
-usage: find_undefined_concepts.py [-h] graph_path
-
-Find concepts that are referenced but undefined in an ontology.
-
-positional arguments:
-  graph_path  Path to the RDF graph of interest (.ttl file).
-
-options:
-  -h, --help  show this help message and exit
->>>>>>> main
