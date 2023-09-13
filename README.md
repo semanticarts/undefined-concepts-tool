@@ -1,6 +1,6 @@
 # undefined-concepts-tool
 
-Find all of the undefined concepts in an ontology
+Find concepts that are referenced but undefined in an ontology.
 
 ## Installation
 
