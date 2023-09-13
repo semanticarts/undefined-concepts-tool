@@ -4,7 +4,7 @@ Find concepts that are referenced but undefined in an ontology.
 
 ## Installation
 
-The script is tested with python 3.10. But most later versions of python3 should work.
+The script is tested with python 3.10, but most later versions of python3 should work.
 
 The script requires the `rdflib` library. Install with `pip install rdflib`.
 
