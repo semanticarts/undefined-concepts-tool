@@ -13,7 +13,7 @@ errors that might crop up in dependencies.
 
 ## Usage
 
-The command takes to arguments context and a focus graph. The context should include all of the
+The command takes two arguments context and a focus graph. The context should include all of the
 ontology files that are imported by the focus graph. These files can all be in a directory, or specified
 individually.
 For example imagine a structure:
