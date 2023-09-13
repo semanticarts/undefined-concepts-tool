@@ -4,7 +4,8 @@ Find all of the undefined concepts in a target ontology.
 """
 
 import os
-from rdflib import Graph, util
+from rdflib import Graph, util, URIRef
+from typing import List, Optional, Tuple
 
 # Load the provided SPARQL queries from the respective files
 with open("./queries/defined_concept_query.rq", "r") as file:
@@ -14,12 +15,12 @@ with open("./queries/undefined_concept_query_template.rq", "r") as file:
     undefined_concept_query_template = file.read()
 
 
-def create_defined_concepts(combined_graph):
+def create_defined_concepts(combined_graph: Graph) -> List[str]:
     """Create the list of concepts that are defined in the ontologies provided"""
     return [str(row['defined_iri']) for row in combined_graph.query(defined_concept_query)]
 
 
-def find_undefined_concepts(defined_concepts_list, graph_of_interest):
+def find_undefined_concepts(defined_concepts_list: List[str], graph_of_interest: Graph):
     """Function to find undefined concepts"""
     # Convert each IRI to its SPARQL format and join into a single string separated by commas
     formatted_defined_concepts = ", ".join([f"<{iri}>" for iri in defined_concepts_list])
@@ -37,7 +38,7 @@ def find_undefined_concepts(defined_concepts_list, graph_of_interest):
     print('\n')
 
 
-def add_files_to_graph(rdf_file, combined_graph, graph_of_interest = None):
+def add_files_to_graph(rdf_file: str, combined_graph: Graph, graph_of_interest: Optional[Graph] = None) -> Tuple[Graph, Optional[Graph]]:
     """"
     Adds files to the combined graph, if a graph of interest is passed in, will also add that to the graph of interest.
     This returns the combined_graph and the graph of interest. If you don't need the graph of interest, don't try to capture it
@@ -51,9 +52,9 @@ def add_files_to_graph(rdf_file, combined_graph, graph_of_interest = None):
     fmt = util.guess_format(rdf_file)
     if not fmt:
         print(f"{rdf_file} does not have a parsable extension, and will not be added to the graph.\n")
-        return
+        return combined_graph, graph_of_interest
     combined_graph.parse(rdf_file, format=fmt)
-    if graph_of_interest != None:
+    if graph_of_interest:
         graph_of_interest.parse(rdf_file, format=fmt)
     return combined_graph, graph_of_interest
 
