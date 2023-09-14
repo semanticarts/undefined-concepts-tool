@@ -4,15 +4,18 @@ Find all of the undefined concepts in a target ontology.
 """
 
 import os
-from rdflib import Graph, util, URIRef
+import importlib.resources
+from rdflib import Graph, util
+
+import queries
 from typing import List, Optional, Tuple
 
 # Load the provided SPARQL queries from the respective files
-with open("./queries/defined_concept_query.rq", "r") as file:
-    defined_concept_query = file.read()
+with importlib.resources.files("queries").joinpath("defined_concept_query.rq") as file:
+    defined_concept_query = file.read_text()
 
-with open("./queries/undefined_concept_query_template.rq", "r") as file:
-    undefined_concept_query_template = file.read()
+with importlib.resources.files("queries").joinpath("undefined_concept_query_template.rq") as file:
+    undefined_concept_query_template = file.read_text()
 
 
 def create_defined_concepts(combined_graph: Graph) -> List[str]:
